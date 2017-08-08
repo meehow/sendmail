@@ -8,7 +8,7 @@ or [sSMTP](https://wiki.debian.org/sSMTP), which provide compatibility interface
 
 * doesn't require any SMTP configuration,
 * just uses `/usr/sbin/sendmail` command which is present on most of the systems,
-* outputs emails to _stdin_ when environment variable `DEBUG` is set.
+* outputs emails to _stdout_ when environment variable `DEBUG` is set.
 
 Installation
 ------------
