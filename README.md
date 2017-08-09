@@ -19,9 +19,20 @@ go get -u github.com/meehow/sendmail
 Usage
 -----
 ```go
-msg := []byte("Subject: Hi\r\nHi Bob.")
-err := sendmail.Send("me@example.com", []string{"bob@example.com"}, msg)
+subject := "Cześć"
+from := "Michał <me@example.com>"
+to := []string{"Ktoś <info@example.com>"}
+mail, err := New(subject, from, to)
 if err != nil {
-	log.Println(err)
+	return err
+}
+mail.Text = []byte(":)")
+if err := mail.Send(); err != nil {
+	return err
 }
 ```
+
+ToDo
+----
+
+* HTML emails
