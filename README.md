@@ -6,6 +6,7 @@ It's stupid simple and it works not only with Sendmail,
 but also with other MTAs, like [Postfix](http://www.postfix.org/sendmail.1.html)
 or [sSMTP](https://wiki.debian.org/sSMTP), which provide compatibility interface.
 
+* it separates email headers from email body,
 * doesn't require any SMTP configuration,
 * just uses `/usr/sbin/sendmail` command which is present on most of the systems,
 * outputs emails to _stdout_ when environment variable `DEBUG` is set.
@@ -22,12 +23,12 @@ Usage
 subject := "Cześć"
 from := "Michał <me@example.com>"
 to := []string{"Ktoś <info@example.com>"}
-mail, err := New(subject, from, to)
+sm, err := sendmail.New(subject, from, to)
 if err != nil {
 	return err
 }
-mail.Text = []byte(":)")
-if err := mail.Send(); err != nil {
+sm.Text = []byte(":)")
+if err := sm.Send(); err != nil {
 	return err
 }
 ```
