@@ -27,11 +27,16 @@ sm, err := sendmail.New(subject, from, to)
 if err != nil {
 	return err
 }
-sm.Text = []byte(":)")
+sm.Text.WriteString(":)\r\n")
 if err := sm.Send(); err != nil {
 	return err
 }
 ```
+
+
+Instead of `WriteString`, you can use a template.
+I.e. [ExecuteTemplate(sm.Text, name, data)](https://golang.org/pkg/text/template/#Template.Execute)
+
 
 ToDo
 ----

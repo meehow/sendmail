@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"mime"
 	"net/http"
@@ -22,8 +23,8 @@ type Mail struct {
 	Header http.Header
 	From   mail.Address
 	To     []mail.Address
-	Text   []byte
-	Html   []byte
+	Text   bytes.Buffer
+	Html   bytes.Buffer
 }
 
 func New(subject, from string, to []string) (*Mail, error) {
@@ -58,14 +59,10 @@ func (m *Mail) Send() error {
 		arg[i] = t.Address
 	}
 	m.Header.Set("To", strings.Join(to, ", "))
-	var msg bytes.Buffer
-	m.Header.Write(&msg)
-	msg.WriteString("\r\n")
-	msg.Write(m.Text)
 	if debug {
 		var delimiter = strings.Repeat("-", 70)
 		fmt.Println(delimiter)
-		fmt.Println(msg.String())
+		m.WriteTo(os.Stdout)
 		fmt.Println(delimiter)
 		return nil
 	}
@@ -81,7 +78,7 @@ func (m *Mail) Send() error {
 	if err := sendmail.Start(); err != nil {
 		return err
 	}
-	if _, err := stdin.Write(msg.Bytes()); err != nil {
+	if err := m.WriteTo(stdin); err != nil {
 		return err
 	}
 	if err := stdin.Close(); err != nil {
@@ -95,4 +92,17 @@ func (m *Mail) Send() error {
 		return errors.New(string(out))
 	}
 	return sendmail.Wait()
+}
+
+func (m *Mail) WriteTo(wr io.Writer) error {
+	if err := m.Header.Write(wr); err != nil {
+		return err
+	}
+	if _, err := wr.Write([]byte("\r\n")); err != nil {
+		return err
+	}
+	if _, err := m.Text.WriteTo(wr); err != nil {
+		return err
+	}
+	return nil
 }

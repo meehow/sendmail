@@ -15,7 +15,7 @@ func TestSend(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	sm.Text = []byte(":)")
+	sm.Text.WriteString(":)\r\n")
 	if err := sm.Send(); err != nil {
 		t.Fatal(err)
 	}
