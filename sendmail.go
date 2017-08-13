@@ -20,37 +20,28 @@ var (
 )
 
 type Mail struct {
-	Header http.Header
-	From   mail.Address
-	To     []mail.Address
-	Text   bytes.Buffer
-	Html   bytes.Buffer
-}
-
-func New(subject, from string, to []string) (*Mail, error) {
-	fromAddress, err := mail.ParseAddress(from)
-	if err != nil {
-		return nil, err
-	}
-	m := Mail{
-		From:   *fromAddress,
-		To:     make([]mail.Address, len(to)),
-		Header: make(http.Header),
-	}
-	for i, t := range to {
-		toAddress, err := mail.ParseAddress(t)
-		if err != nil {
-			return nil, err
-		}
-		m.To[i] = *toAddress
-	}
-	m.Header.Set("Subject", mime.QEncoding.Encode("utf-8", subject))
-	return &m, nil
+	Subject string
+	From    *mail.Address
+	To      []*mail.Address
+	Header  *http.Header
+	Text    *bytes.Buffer
+	Html    *bytes.Buffer
 }
 
 // Send sends an email, or prints it on stderr,
 // when environment variable `DEBUG` is set.
 func (m *Mail) Send() error {
+	if m.From == nil {
+		return errors.New("Missing `From` address")
+	}
+	if len(m.To) == 0 {
+		return errors.New("Missing `To` address")
+	}
+	if m.Header == nil {
+		header := make(http.Header)
+		m.Header = &header
+	}
+	m.Header.Set("Subject", mime.QEncoding.Encode("utf-8", m.Subject))
 	m.Header.Set("From", m.From.String())
 	to := make([]string, len(m.To))
 	arg := make([]string, len(m.To))
