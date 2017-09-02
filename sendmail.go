@@ -23,9 +23,9 @@ type Mail struct {
 	Subject string
 	From    *mail.Address
 	To      []*mail.Address
-	Header  *http.Header
-	Text    *bytes.Buffer
-	Html    *bytes.Buffer
+	Header  http.Header
+	Text    bytes.Buffer
+	Html    bytes.Buffer
 }
 
 // Send sends an email, or prints it on stderr,
@@ -38,9 +38,9 @@ func (m *Mail) Send() error {
 		return errors.New("Missing `To` address")
 	}
 	if m.Header == nil {
-		header := make(http.Header)
-		m.Header = &header
+		m.Header = make(http.Header)
 	}
+	m.Header.Set("Content-Type", "text/plain; charset=UTF-8")
 	m.Header.Set("Subject", mime.QEncoding.Encode("utf-8", m.Subject))
 	m.Header.Set("From", m.From.String())
 	to := make([]string, len(m.To))
@@ -51,7 +51,7 @@ func (m *Mail) Send() error {
 	}
 	m.Header.Set("To", strings.Join(to, ", "))
 	if debug {
-		var delimiter = strings.Repeat("-", 70)
+		delimiter := "\n" + strings.Repeat("-", 70)
 		fmt.Println(delimiter)
 		m.WriteTo(os.Stdout)
 		fmt.Println(delimiter)

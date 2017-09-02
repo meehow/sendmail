@@ -1,8 +1,8 @@
 package sendmail
 
 import (
-	"bytes"
 	"fmt"
+	"io"
 	"net/mail"
 	"testing"
 )
@@ -17,8 +17,8 @@ func TestSend(t *testing.T) {
 			{"Ktoś", "info@" + domain},
 			{"Ktoś2", "info2@" + domain},
 		},
-		Text: bytes.NewBufferString(":)\r\n"),
 	}
+	io.WriteString(&sm.Text, ":)\r\n")
 	if err := sm.Send(); err != nil {
 		t.Fatal(err)
 	}

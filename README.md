@@ -40,8 +40,8 @@ func main() {
 			{"Ktoś", "info@example.com"},
 			{"Ktoś2", "info2@example.com"},
 		},
-		Text: bytes.NewBufferString(":)\r\n"),
 	}
+	io.WriteString(&sm.Text, ":)\r\n")
 	if err := sm.Send(); err != nil {
 		log.Println(err)
 	}
@@ -50,9 +50,9 @@ func main() {
 ```
 
 
-Instead of `NewBufferString`, you can use a template to write to the buffer.
+Instead of `io.WriteString`, you can execute a template.
 
-I.e. [ExecuteTemplate(sm.Text, name, data)](https://golang.org/pkg/text/template/#Template.Execute)
+I.e. [ExecuteTemplate(&sm.Text, name, data)](https://golang.org/pkg/text/template/#Template.Execute)
 
 
 ToDo
