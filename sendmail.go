@@ -19,13 +19,14 @@ var (
 	_, debug = os.LookupEnv("DEBUG")
 )
 
+// Mail defines basic mail structure and headers
 type Mail struct {
 	Subject string
 	From    *mail.Address
 	To      []*mail.Address
 	Header  http.Header
 	Text    bytes.Buffer
-	Html    bytes.Buffer
+	HTML    bytes.Buffer
 }
 
 // Send sends an email, or prints it on stderr,
