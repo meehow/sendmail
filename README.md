@@ -49,10 +49,14 @@ func main() {
 }
 ```
 
+Instead of `io.WriteString`, you can [execute a template][template]:
 
-Instead of `io.WriteString`, you can execute a template.
+[template]: https://golang.org/pkg/text/template/#Template.Execute
 
-I.e. [ExecuteTemplate(&sm.Text, name, data)](https://golang.org/pkg/text/template/#Template.Execute)
+```go
+tpl := template.Must(template.New("email").Parse(`Hello {{.Name}}!`))
+tpl.ExecuteTemplate(&sm.Text, "email", &struct{ Name string }{"Dominik"})
+```
 
 
 ToDo
