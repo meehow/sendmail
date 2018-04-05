@@ -26,7 +26,7 @@ Usage
 package main
 
 import (
-	"bytes"
+	"io"
 	"log"
 	"net/mail"
 
@@ -47,7 +47,6 @@ func main() {
 		log.Println(err)
 	}
 }
-
 ```
 
 

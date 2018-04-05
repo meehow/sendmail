@@ -1,4 +1,5 @@
-// This package implements classic, well known from PHP, method of sending emails.
+// Package sendmail implements then classic method of sending emails,
+// well known from PHP.
 package sendmail
 
 import (
@@ -70,13 +71,13 @@ func (m *Mail) Send() error {
 	if err != nil {
 		return err
 	}
-	if err := sendmail.Start(); err != nil {
+	if err = sendmail.Start(); err != nil {
 		return err
 	}
-	if err := m.WriteTo(stdin); err != nil {
+	if err = m.WriteTo(stdin); err != nil {
 		return err
 	}
-	if err := stdin.Close(); err != nil {
+	if err = stdin.Close(); err != nil {
 		return err
 	}
 	out, err := ioutil.ReadAll(stderr)

@@ -9,13 +9,17 @@ import (
 
 const domain = "example.com"
 
+func maddr(name, address string) *mail.Address {
+	return &mail.Address{Name: name, Address: address + domain}
+}
+
 func TestSend(t *testing.T) {
 	sm := Mail{
 		Subject: "Cześć",
-		From:    &mail.Address{"Michał", "me@" + domain},
+		From:    maddr("Michał", "me@"),
 		To: []*mail.Address{
-			{"Ktoś", "info@" + domain},
-			{"Ktoś2", "info2@" + domain},
+			maddr("Ktoś", "info@"),
+			maddr("Ktoś2", "info2@"),
 		},
 	}
 	io.WriteString(&sm.Text, ":)\r\n")
@@ -34,9 +38,7 @@ func TestSend(t *testing.T) {
 
 func TestFromError(t *testing.T) {
 	sm := Mail{
-		To: []*mail.Address{
-			{"Ktoś", "info@" + domain},
-		},
+		To: []*mail.Address{maddr("Ktoś", "info@")},
 	}
 	if sm.Send() == nil {
 		t.Fatal("Expected an error because of missing `From` addresses")
@@ -45,7 +47,7 @@ func TestFromError(t *testing.T) {
 
 func TestToError(t *testing.T) {
 	sm := Mail{
-		From: &mail.Address{"Michał", "me@" + domain},
+		From: maddr("Michał", "me@"),
 	}
 	if sm.Send() == nil {
 		t.Fatal("Expected an error because of missing `To` addresses")
