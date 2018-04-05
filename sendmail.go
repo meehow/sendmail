@@ -17,6 +17,9 @@ import (
 
 var (
 	_, debug = os.LookupEnv("DEBUG")
+
+	// Binary points to the sendmail binary.
+	Binary = "/usr/sbin/sendmail"
 )
 
 // Mail defines basic mail structure and headers
@@ -58,7 +61,7 @@ func (m *Mail) Send() error {
 		fmt.Println(delimiter)
 		return nil
 	}
-	sendmail := exec.Command("/usr/sbin/sendmail", arg...)
+	sendmail := exec.Command(Binary, arg...)
 	stdin, err := sendmail.StdinPipe()
 	if err != nil {
 		return err

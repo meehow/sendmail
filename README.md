@@ -11,6 +11,7 @@ or [sSMTP](https://wiki.debian.org/sSMTP), which provide compatibility interface
 * makes it easy to use [text/template](https://golang.org/pkg/text/template)
 * doesn't require any SMTP configuration,
 * just uses `/usr/sbin/sendmail` command which is present on most of the systems,
+  * if not, just update `sendmail.Binary`
 * outputs emails to _stdout_ when environment variable `DEBUG` is set.
 
 Installation
