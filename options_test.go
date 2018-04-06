@@ -23,8 +23,8 @@ func TestChaningOptions(t *testing.T) {
 	if m.From != nil {
 		t.Errorf("Expected From address to be nil, got %s", m.From)
 	}
-	if m.sendmail != "" {
-		t.Errorf("Expected initial sendmail to be empty, got %q", m.sendmail)
+	if m.sendmailPath != "" {
+		t.Errorf("Expected initial sendmail to be empty, got %q", m.sendmailPath)
 	}
 	if m.debugOut != nil {
 		t.Errorf("Expected initial debugOut to be nil, got %T", m.debugOut)
@@ -46,8 +46,8 @@ func TestChaningOptions(t *testing.T) {
 		expected := mail.Address{Name: "Dominik", Address: "dominik@example.org"}
 		t.Errorf("Expected From address to be %s, got %s", expected, m.From)
 	}
-	if m.sendmail != "/bin/true" {
-		t.Errorf("Expected sendmail to be %q, got %q", "/bin/true", m.sendmail)
+	if m.sendmailPath != "/bin/true" {
+		t.Errorf("Expected sendmail to be %q, got %q", "/bin/true", m.sendmailPath)
 	}
 	if m.debugOut != &buf {
 		t.Errorf("Expected debugOut to be %T (buf), got %T", &buf, m.debugOut)
@@ -57,9 +57,12 @@ func TestChaningOptions(t *testing.T) {
 func TestOptions(t *testing.T) {
 	m := &Mail{}
 
-	o := Sendmail("/foo/bar")
-	if o.execute(m); m.sendmail != "/foo/bar" {
-		t.Errorf("Expected sendmail to be %q, got %q", "/foo/bar", m.sendmail)
+	o := Sendmail("/foo/bar", "--verbose")
+	if o.execute(m); m.sendmailPath != "/foo/bar" {
+		t.Errorf("Expected sendmail to be %q, got %q", "/foo/bar", m.sendmailPath)
+	}
+	if len(m.sendmailArgs) != 1 || m.sendmailArgs[0] != "--verbose" {
+		t.Errorf("Expected sendmail args to be %q, got %v", "--verbose", m.sendmailArgs)
 	}
 
 	o = Debug(true)

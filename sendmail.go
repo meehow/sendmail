@@ -27,13 +27,14 @@ type Mail struct {
 	Text    bytes.Buffer
 	HTML    bytes.Buffer
 
-	sendmail string
-	debugOut io.Writer
+	sendmailPath string
+	sendmailArgs []string
+	debugOut     io.Writer
 }
 
 // New creates a new Mail instance with the given options.
 func New(options ...Option) (m *Mail) {
-	m = &Mail{sendmail: SendmailDefault}
+	m = &Mail{sendmailPath: SendmailDefault}
 	for _, option := range options {
 		option.execute(m)
 	}
@@ -72,10 +73,11 @@ func (m *Mail) Send() error {
 // exec handles sendmail command invokation.
 func (m *Mail) exec(arg ...string) error {
 	bin := SendmailDefault
-	if m.sendmail != "" {
-		bin = m.sendmail
+	if m.sendmailPath != "" {
+		bin = m.sendmailPath
 	}
-	cmd := exec.Command(bin, arg...)
+	args := append(append([]string{}, m.sendmailArgs...), arg...)
+	cmd := exec.Command(bin, args...)
 
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
@@ -105,7 +107,7 @@ func (m *Mail) exec(arg ...string) error {
 }
 
 // WriteTo writes headers and content of the email to io.Writer
-func (m *Mail) WriteTo(wr io.Writer) error { //nolint: vet
+func (m *Mail) WriteTo(wr io.Writer) error { // nolint: vet
 	isText := m.Text.Len() > 0
 	isHTML := m.HTML.Len() > 0
 

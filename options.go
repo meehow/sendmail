@@ -6,9 +6,11 @@ import (
 	"os"
 )
 
-// SetSendmail modifies the path to the sendmail binary.
-func (m *Mail) SetSendmail(path string) *Mail {
-	m.sendmail = path
+// SetSendmail modifies the path to the sendmail binary. You can pass
+// additional arguments, if you need to.
+func (m *Mail) SetSendmail(path string, args ...string) *Mail {
+	m.sendmailPath = path
+	m.sendmailArgs = args
 	return m
 }
 
@@ -61,8 +63,8 @@ type optionFunc func(*Mail)
 func (o optionFunc) execute(m *Mail) { o(m) }
 
 // Sendmail modifies the path to the sendmail binary.
-func Sendmail(path string) Option {
-	return optionFunc(func(m *Mail) { m.SetSendmail(path) })
+func Sendmail(path string, args ...string) Option {
+	return optionFunc(func(m *Mail) { m.SetSendmail(path, args...) })
 }
 
 // Debug sets the debug output to stderr if active is true, else it

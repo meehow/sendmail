@@ -149,8 +149,8 @@ func TestNew(t *testing.T) {
 		expected := mail.Address{Name: "Dominik", Address: "dominik@example.org"}
 		t.Errorf("Expected From address to be %s, got %s", expected, m.From)
 	}
-	if m.sendmail != "/bin/true" {
-		t.Errorf("Expected sendmail to be %q, got %q", "/bin/true", m.sendmail)
+	if m.sendmailPath != "/bin/true" {
+		t.Errorf("Expected sendmail to be %q, got %q", "/bin/true", m.sendmailPath)
 	}
 	if m.debugOut != &buf {
 		t.Errorf("Expected debugOut to be %T (buf), got %T", &buf, m.debugOut)
