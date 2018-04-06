@@ -20,7 +20,6 @@ var _, debug = os.LookupEnv("DEBUG")
 
 // SendmailDefault points to the default sendmail binary location.
 const SendmailDefault = "/usr/sbin/sendmail"
-const debugDelimiter = "\n----------------------------------------------------------------------"
 
 // Mail defines basic mail structure and headers
 type Mail struct {
@@ -68,9 +67,7 @@ func (m *Mail) Send() error {
 	}
 	m.Header.Set("To", strings.Join(to, ", "))
 	if m.debugOut != nil {
-		fmt.Println(debugDelimiter)
 		m.WriteTo(m.debugOut)
-		fmt.Println(debugDelimiter)
 		return nil
 	}
 
