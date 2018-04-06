@@ -3,6 +3,7 @@ package sendmail
 import (
 	"bytes"
 	"net/mail"
+	"os"
 	"testing"
 )
 
@@ -50,5 +51,68 @@ func TestChaningOptions(t *testing.T) {
 	}
 	if m.debugOut != &buf {
 		t.Errorf("Expected debugOut to be %T (buf), got %T", &buf, m.debugOut)
+	}
+}
+
+func TestOptions(t *testing.T) {
+	m := &Mail{}
+	var o Option
+
+	o = Sendmail("/foo/bar")
+	if o.execute(m); m.sendmail != "/foo/bar" {
+		t.Errorf("Expected sendmail to be %q, got %q", "/foo/bar", m.sendmail)
+	}
+
+	o = Debug(true)
+	if o.execute(m); m.debugOut != os.Stderr {
+		t.Errorf("Expected debugOut to be %T (stderr), got %T", os.Stderr, m.debugOut)
+	}
+
+	o = Debug(false)
+	if o.execute(m); m.debugOut != nil {
+		t.Errorf("Expected debugOut to be nil, got %T", m.debugOut)
+	}
+
+	var buf bytes.Buffer
+	o = DebugOutput(&buf)
+	if o.execute(m); m.debugOut != &buf {
+		t.Errorf("Expected debugOut to be %T (buf), got %T", &buf, m.debugOut)
+	}
+
+	o = DebugOutput(nil)
+	if o.execute(m); m.debugOut != nil {
+		t.Errorf("Expected debugOut to be nil, got %T", m.debugOut)
+	}
+
+	// To() appends list
+	o = To("Ktoś", "info@example.com")
+	if o.execute(m); len(m.To) != 1 {
+		t.Errorf("Expected len(To) to be 1, got %d: %+v", len(m.To), m.To)
+	}
+	o = To("Ktoś2", "info2@example.com")
+	if o.execute(m); len(m.To) != 2 {
+		t.Errorf("Expected len(To) to be 2, got %d: %+v", len(m.To), m.To)
+	}
+
+	// From() updates current sender
+	o = From("Michał", "me@example.com")
+	if o.execute(m); m.From == nil || m.From.Address != "me@example.com" {
+		expected := mail.Address{Name: "Michał", Address: "me@example.com"}
+		t.Errorf("Expected From address to be %s, got %s", expected, m.From)
+	}
+	o = From("Michał", "me@example.com")
+	if o.execute(m); m.From == nil || m.From.Address != "me@example.com" {
+		expected := mail.Address{Name: "Michał", Address: "me@example.com"}
+		t.Errorf("Expected From address to be %s, got %s", expected, m.From)
+	}
+
+	// Subject() updates current subject
+	o = Subject("Cześć")
+	if o.execute(m); m.Subject != "Cześć" {
+		t.Errorf("Expected Subject to be %q, got %q", "Cześć", m.Subject)
+	}
+	o = Subject("Test")
+	if o.execute(m); m.Subject != "Test" {
+		t.Errorf("Expected Subject to be %q, got %q", "Test", m.Subject)
 	}
 }

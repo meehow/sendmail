@@ -1,6 +1,7 @@
 package sendmail
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"net/mail"
@@ -64,5 +65,33 @@ func TestToError(t *testing.T) {
 	}
 	if sm.Send() == nil {
 		t.Errorf("Expected an error because of missing `To` addresses")
+	}
+}
+
+func TestNew(t *testing.T) {
+	var buf bytes.Buffer
+	m := New(
+		Subject("Test subject"),
+		From("Dominik", "dominik@example.org"),
+		To("Dominik2", "dominik2@example.org"),
+		DebugOutput(&buf),
+		Sendmail("/bin/true"),
+	)
+
+	if m.Subject != "Test subject" {
+		t.Errorf("Expected subject to be %q, got %q", "Test subject", m.Subject)
+	}
+	if len(m.To) != 1 {
+		t.Errorf("Expected len(To) to be 1, got %d: %+v", len(m.To), m.To)
+	}
+	if m.From == nil || m.From.Address != "dominik@example.org" {
+		expected := mail.Address{Name: "Dominik", Address: "dominik@example.org"}
+		t.Errorf("Expected From address to be %s, got %s", expected, m.From)
+	}
+	if m.sendmail != "/bin/true" {
+		t.Errorf("Expected sendmail to be %q, got %q", "/bin/true", m.sendmail)
+	}
+	if m.debugOut != &buf {
+		t.Errorf("Expected debugOut to be %T (buf), got %T", &buf, m.debugOut)
 	}
 }

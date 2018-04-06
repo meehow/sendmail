@@ -35,6 +35,15 @@ type Mail struct {
 	debugOut io.Writer
 }
 
+// New creates a new Mail instance with the given options.
+func New(options ...Option) (m *Mail) {
+	m = &Mail{sendmail: SendmailDefault}
+	for _, option := range options {
+		option.execute(m)
+	}
+	return
+}
+
 // Send sends an email, or prints it on stderr,
 // when environment variable `DEBUG` is set.
 func (m *Mail) Send() error {
