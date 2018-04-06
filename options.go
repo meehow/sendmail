@@ -2,6 +2,7 @@ package sendmail
 
 import (
 	"io"
+	"net/mail"
 	"os"
 )
 
@@ -26,5 +27,26 @@ func (m *Mail) SetDebug(active bool) *Mail {
 // nil, this is equivalent to SetDebug(false).
 func (m *Mail) SetDebugOutput(w io.Writer) *Mail {
 	m.debugOut = w
+	return m
+}
+
+// AppendTo adds a recipient to the Mail. The name argument is the
+// "proper name" of the recipient and may be empty. The address must be
+// in the form "user@domain".
+func (m *Mail) AppendTo(name, address string) *Mail {
+	m.To = append(m.To, &mail.Address{Name: name, Address: address})
+	return m
+}
+
+// SetFrom updates the sender's address. Like AppendTo(), name may be
+// empty, and address must be in the form "user@domain".
+func (m *Mail) SetFrom(name, address string) *Mail {
+	m.From = &mail.Address{Name: name, Address: address}
+	return m
+}
+
+// SetSubject sets the mail subject.
+func (m *Mail) SetSubject(subject string) *Mail {
+	m.Subject = subject
 	return m
 }
