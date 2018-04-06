@@ -11,6 +11,7 @@ or [sSMTP](https://wiki.debian.org/sSMTP), which provide compatibility interface
 * makes it easy to use [text/template](https://golang.org/pkg/text/template)
 * doesn't require any SMTP configuration,
 * just uses `/usr/sbin/sendmail` command which is present on most of the systems,
+  * if not, just update `sendmail.Binary`
 * outputs emails to _stdout_ when environment variable `DEBUG` is set.
 
 Installation
@@ -25,7 +26,7 @@ Usage
 package main
 
 import (
-	"bytes"
+	"io"
 	"log"
 	"net/mail"
 
@@ -46,13 +47,16 @@ func main() {
 		log.Println(err)
 	}
 }
-
 ```
 
+Instead of `io.WriteString`, you can [execute a template][template]:
 
-Instead of `io.WriteString`, you can execute a template.
+[template]: https://golang.org/pkg/text/template/#Template.Execute
 
-I.e. [ExecuteTemplate(&sm.Text, name, data)](https://golang.org/pkg/text/template/#Template.Execute)
+```go
+tpl := template.Must(template.New("email").Parse(`Hello {{.Name}}!`))
+tpl.ExecuteTemplate(&sm.Text, "email", &struct{ Name string }{"Dominik"})
+```
 
 
 ToDo
