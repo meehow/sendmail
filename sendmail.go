@@ -16,12 +16,10 @@ import (
 	"strings"
 )
 
-var (
-	_, debug = os.LookupEnv("DEBUG")
+var _, debug = os.LookupEnv("DEBUG")
 
-	// Binary points to the sendmail binary.
-	Binary = "/usr/sbin/sendmail"
-)
+// SendmailDefault points to the default sendmail binary location.
+const SendmailDefault = "/usr/sbin/sendmail"
 
 // Mail defines basic mail structure and headers
 type Mail struct {
@@ -31,6 +29,8 @@ type Mail struct {
 	Header  http.Header
 	Text    bytes.Buffer
 	HTML    bytes.Buffer
+
+	sendmail string
 }
 
 // Send sends an email, or prints it on stderr,
@@ -48,6 +48,7 @@ func (m *Mail) Send() error {
 	m.Header.Set("Content-Type", "text/plain; charset=UTF-8")
 	m.Header.Set("Subject", mime.QEncoding.Encode("utf-8", m.Subject))
 	m.Header.Set("From", m.From.String())
+
 	to := make([]string, len(m.To))
 	arg := make([]string, len(m.To))
 	for i, t := range m.To {
@@ -62,16 +63,27 @@ func (m *Mail) Send() error {
 		fmt.Println(delimiter)
 		return nil
 	}
-	sendmail := exec.Command(Binary, arg...)
-	stdin, err := sendmail.StdinPipe()
+
+	return m.exec(arg...)
+}
+
+// exec handles sendmail command invokation.
+func (m *Mail) exec(arg ...string) error {
+	bin := SendmailDefault
+	if m.sendmail != "" {
+		bin = m.sendmail
+	}
+	cmd := exec.Command(bin, arg...)
+
+	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		return err
 	}
-	stderr, err := sendmail.StderrPipe()
+	stderr, err := cmd.StderrPipe()
 	if err != nil {
 		return err
 	}
-	if err = sendmail.Start(); err != nil {
+	if err = cmd.Start(); err != nil {
 		return err
 	}
 	if err = m.WriteTo(stdin); err != nil {
@@ -87,7 +99,7 @@ func (m *Mail) Send() error {
 	if len(out) != 0 {
 		return errors.New(string(out))
 	}
-	return sendmail.Wait()
+	return cmd.Wait()
 }
 
 // WriteTo writes headers and content of the email to io.Writer

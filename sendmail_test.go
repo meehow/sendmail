@@ -13,10 +13,6 @@ func maddr(name, address string) *mail.Address {
 	return &mail.Address{Name: name, Address: address + domain}
 }
 
-func init() {
-	Binary = "/bin/true"
-}
-
 func TestSend(tc *testing.T) {
 	tc.Run("debug:true", func(t *testing.T) {
 		testSend(t, true)
@@ -39,6 +35,8 @@ func testSend(t *testing.T, withDebug bool) {
 			maddr("Ktoś2", "info2@"),
 		},
 	}
+	sm.SetSendmail("/bin/true")
+
 	io.WriteString(&sm.Text, ":)\r\n")
 	if err := sm.Send(); err != nil {
 		t.Errorf("(debug=%v) %v", withDebug, err)

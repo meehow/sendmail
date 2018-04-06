@@ -10,9 +10,8 @@ or [sSMTP](https://wiki.debian.org/sSMTP), which provide compatibility interface
 * encodes UTF-8 headers like `Subject`, `From`, `To`
 * makes it easy to use [text/template](https://golang.org/pkg/text/template)
 * doesn't require any SMTP configuration,
-* just uses `/usr/sbin/sendmail` command which is present on most of the systems,
-  * if not, just update `sendmail.Binary`
 * outputs emails to _stdout_ when environment variable `DEBUG` is set.
+* by default, it just uses `/usr/sbin/sendmail` (but can be changed if need be)
 
 Installation
 ------------
