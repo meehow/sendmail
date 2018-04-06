@@ -77,8 +77,7 @@ func TestTextMail(t *testing.T) {
 		t.Errorf("Error writing to buffer: %v", err)
 	}
 	if actual := buf.String(); actual != expected {
-		fmt.Fprintln(os.Stderr, actual)
-		t.Errorf("Unexpected mail content")
+		t.Error("Unexpected mail content", actual)
 	}
 }
 

@@ -11,12 +11,9 @@ import (
 	"mime"
 	"net/http"
 	"net/mail"
-	"os"
 	"os/exec"
 	"strings"
 )
-
-var _, debug = os.LookupEnv("DEBUG")
 
 // SendmailDefault points to the default sendmail binary location.
 const SendmailDefault = "/usr/sbin/sendmail"
@@ -66,8 +63,7 @@ func (m *Mail) Send() error {
 	}
 	m.Header.Set("To", strings.Join(to, ", "))
 	if m.debugOut != nil {
-		m.WriteTo(m.debugOut)
-		return nil
+		return m.WriteTo(m.debugOut)
 	}
 
 	return m.exec(arg...)
@@ -109,7 +105,7 @@ func (m *Mail) exec(arg ...string) error {
 }
 
 // WriteTo writes headers and content of the email to io.Writer
-func (m *Mail) WriteTo(wr io.Writer) error {
+func (m *Mail) WriteTo(wr io.Writer) error { //nolint: vet
 	isText := m.Text.Len() > 0
 	isHTML := m.HTML.Len() > 0
 

@@ -56,9 +56,8 @@ func TestChaningOptions(t *testing.T) {
 
 func TestOptions(t *testing.T) {
 	m := &Mail{}
-	var o Option
 
-	o = Sendmail("/foo/bar")
+	o := Sendmail("/foo/bar")
 	if o.execute(m); m.sendmail != "/foo/bar" {
 		t.Errorf("Expected sendmail to be %q, got %q", "/foo/bar", m.sendmail)
 	}
