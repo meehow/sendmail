@@ -1,4 +1,4 @@
-Go sendmail
+Go sendmail [![Build Status](https://travis-ci.org/meehow/sendmail.svg?branch=master)](https://travis-ci.org/meehow/sendmail)
 ===========
 
 This package implements classic, well known from PHP, method of sending emails.
