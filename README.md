@@ -17,7 +17,7 @@ provide a compatible interface.
 * encodes UTF-8 headers like `Subject`, `From`, `To`
 * makes it easy to use [text/template](https://golang.org/pkg/text/template)
 * doesn't require any SMTP configuration,
-* outputs emails to _stdout_ when environment variable `DEBUG` is set.
+* can write email body to a custom `io.Writer` to simplify testing
 * by default, it just uses `/usr/sbin/sendmail` (but can be changed if need be)
 
 

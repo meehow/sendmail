@@ -15,18 +15,16 @@ func maddr(name, address string) *mail.Address {
 
 func TestSend(tc *testing.T) {
 	tc.Run("debug:true", func(t *testing.T) {
+		t.Parallel()
 		testSend(t, true)
 	})
 	tc.Run("debug:false", func(t *testing.T) {
+		t.Parallel()
 		testSend(t, false)
 	})
 }
 
 func testSend(t *testing.T, withDebug bool) {
-	oldDebug := debug
-	debug = withDebug
-	defer func() { debug = oldDebug }()
-
 	sm := Mail{
 		Subject: "Cześć",
 		From:    maddr("Michał", "me@"),
@@ -35,7 +33,7 @@ func testSend(t *testing.T, withDebug bool) {
 			maddr("Ktoś2", "info2@"),
 		},
 	}
-	sm.SetSendmail("/bin/true")
+	sm.SetSendmail("/bin/true").SetDebug(withDebug)
 
 	io.WriteString(&sm.Text, ":)\r\n")
 	if err := sm.Send(); err != nil {
