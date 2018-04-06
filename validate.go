@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// Validate checks if email is valid
+// Validate checks if email host has assigned IP address
 func Validate(email string) error {
 	emailParts := strings.SplitN(email, "@", 3)
 	if len(emailParts) != 2 {

@@ -90,6 +90,7 @@ func (m *Mail) Send() error {
 	return sendmail.Wait()
 }
 
+// WriteTo writes headers and content of the email to io.Writer
 func (m *Mail) WriteTo(wr io.Writer) error {
 	if err := m.Header.Write(wr); err != nil {
 		return err
