@@ -68,4 +68,7 @@ tpl.ExecuteTemplate(&sm.Text, "email", &struct{ Name string }{"Dominik"})
 
 ## ToDo
 
-* HTML emails
+- [x] HTML emails
+- [ ] multipart emails (HTML + Text)
+- [ ] attachments
+- [ ] inline attachments

@@ -82,6 +82,36 @@ func TestTextMail(t *testing.T) {
 	}
 }
 
+func TestHTMLMail(t *testing.T) {
+	var buf bytes.Buffer
+	sm := New(
+		Subject("Cześć"),
+		From("Michał", "me@"+domain),
+		To("Ktoś", "info@"+domain),
+		To("Ktoś2", "info2@"+domain),
+		DebugOutput(&buf),
+	)
+	io.WriteString(&sm.HTML, "<p>:)</p>\r\n")
+
+	expected := strings.Join([]string{
+		"Content-Type: text/html; charset=UTF-8",
+		"From: =?utf-8?q?Micha=C5=82?= <me@example.com>",
+		"Subject: =?utf-8?q?Cze=C5=9B=C4=87?=",
+		"To: =?utf-8?q?Kto=C5=9B?= <info@example.com>, =?utf-8?q?Kto=C5=9B2?= <info2@example.com>",
+		"",
+		"<p>:)</p>",
+		"",
+	}, "\r\n")
+
+	if err := sm.Send(); err != nil {
+		t.Errorf("Error writing to buffer: %v", err)
+	}
+	if actual := buf.String(); actual != expected {
+		fmt.Fprintln(os.Stderr, actual)
+		t.Errorf("Unexpected mail content")
+	}
+}
+
 func TestFromError(t *testing.T) {
 	sm := Mail{
 		To: []*mail.Address{maddr("Ktoś", "info@")},

@@ -55,7 +55,6 @@ func (m *Mail) Send() error {
 	if m.Header == nil {
 		m.Header = make(http.Header)
 	}
-	m.Header.Set("Content-Type", "text/plain; charset=UTF-8")
 	m.Header.Set("Subject", mime.QEncoding.Encode("utf-8", m.Subject))
 	m.Header.Set("From", m.From.String())
 
@@ -111,14 +110,36 @@ func (m *Mail) exec(arg ...string) error {
 
 // WriteTo writes headers and content of the email to io.Writer
 func (m *Mail) WriteTo(wr io.Writer) error {
+	isText := m.Text.Len() > 0
+	isHTML := m.HTML.Len() > 0
+
+	if isText && isHTML {
+		return fmt.Errorf("Multipart mails are not supported yet")
+	} else if isHTML {
+		m.Header.Set("Content-Type", "text/html; charset=UTF-8")
+	} else {
+		// also for mails without body
+		m.Header.Set("Content-Type", "text/plain; charset=UTF-8")
+	}
+
+	// write header
 	if err := m.Header.Write(wr); err != nil {
 		return err
 	}
 	if _, err := wr.Write([]byte("\r\n")); err != nil {
 		return err
 	}
-	if _, err := m.Text.WriteTo(wr); err != nil {
-		return err
+
+	if isText && isHTML {
+		// TODO
+	} else if isHTML {
+		if _, err := m.HTML.WriteTo(wr); err != nil {
+			return err
+		}
+	} else if isText {
+		if _, err := m.Text.WriteTo(wr); err != nil {
+			return err
+		}
 	}
 	return nil
 }
