@@ -32,18 +32,15 @@ func (m *Mail) SetDebugOutput(w io.Writer) *Mail {
 	return m
 }
 
-// AppendTo adds a recipient to the Mail. The name argument is the
-// "proper name" of the recipient and may be empty. The address must be
-// in the form "user@domain".
-func (m *Mail) AppendTo(name, address string) *Mail {
-	m.To = append(m.To, &mail.Address{Name: name, Address: address})
+// AppendTo adds a recipient to the Mail.
+func (m *Mail) AppendTo(toAddress *mail.Address) *Mail {
+	m.To = append(m.To, toAddress)
 	return m
 }
 
-// SetFrom updates the sender's address. Like AppendTo(), name may be
-// empty, and address must be in the form "user@domain".
-func (m *Mail) SetFrom(name, address string) *Mail {
-	m.From = &mail.Address{Name: name, Address: address}
+// SetFrom updates (replaces) the sender's address.
+func (m *Mail) SetFrom(fromAddress *mail.Address) *Mail {
+	m.From = fromAddress
 	return m
 }
 
@@ -79,17 +76,14 @@ func DebugOutput(w io.Writer) Option {
 	return optionFunc(func(m *Mail) { m.SetDebugOutput(w) })
 }
 
-// To adds a recipient to the Mail. The name argument is the "proper name"
-// of the recipient and may be empty. The address must be in the form
-// "user@domain".
-func To(name, address string) Option {
-	return optionFunc(func(m *Mail) { m.AppendTo(name, address) })
+// To adds a recipient to the Mail.
+func To(address *mail.Address) Option {
+	return optionFunc(func(m *Mail) { m.AppendTo(address) })
 }
 
-// From updates the sender's address. Like To(), name may be empty, and
-// address must be in the form "user@domain".
-func From(name, address string) Option {
-	return optionFunc(func(m *Mail) { m.SetFrom(name, address) })
+// From sets the sender's address.
+func From(fromAddress *mail.Address) Option {
+	return optionFunc(func(m *Mail) { m.SetFrom(fromAddress) })
 }
 
 // Subject sets the mail subject.

@@ -56,9 +56,9 @@ func TestTextMail(t *testing.T) {
 	var buf bytes.Buffer
 	sm := New(
 		Subject("Cześć"),
-		From("Michał", "me@"+domain),
-		To("Ktoś", "info@"+domain),
-		To("Ktoś2", "info2@"+domain),
+		From(maddr("Michał", "me@")),
+		To(maddr("Ktoś", "info@")),
+		To(maddr("Ktoś2", "info2@")),
 		DebugOutput(&buf),
 	)
 	io.WriteString(&sm.Text, ":)\r\n")
@@ -85,9 +85,9 @@ func TestHTMLMail(t *testing.T) {
 	var buf bytes.Buffer
 	sm := New(
 		Subject("Cześć"),
-		From("Michał", "me@"+domain),
-		To("Ktoś", "info@"+domain),
-		To("Ktoś2", "info2@"+domain),
+		From(maddr("Michał", "me@")),
+		To(maddr("Ktoś", "info@")),
+		To(maddr("Ktoś2", "info2@")),
 		DebugOutput(&buf),
 	)
 	io.WriteString(&sm.HTML, "<p>:)</p>\r\n")
@@ -133,8 +133,8 @@ func TestNew(t *testing.T) {
 	var buf bytes.Buffer
 	m := New(
 		Subject("Test subject"),
-		From("Dominik", "dominik@example.org"),
-		To("Dominik2", "dominik2@example.org"),
+		From(maddr("Dominik", "dominik@")),
+		To(maddr("Dominik2", "dominik2@")),
 		DebugOutput(&buf),
 		Sendmail("/bin/true"),
 	)
@@ -145,8 +145,8 @@ func TestNew(t *testing.T) {
 	if len(m.To) != 1 {
 		t.Errorf("Expected len(To) to be 1, got %d: %+v", len(m.To), m.To)
 	}
-	if m.From == nil || m.From.Address != "dominik@example.org" {
-		expected := mail.Address{Name: "Dominik", Address: "dominik@example.org"}
+	if m.From == nil || m.From.Address != "dominik@example.com" {
+		expected := mail.Address{Name: "Dominik", Address: "dominik@example.com"}
 		t.Errorf("Expected From address to be %s, got %s", expected, m.From)
 	}
 	if m.sendmailPath != "/bin/true" {

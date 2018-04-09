@@ -31,8 +31,8 @@ func TestChaningOptions(t *testing.T) {
 	}
 
 	m.SetSubject("Test subject").
-		SetFrom("Dominik", "dominik@example.org").
-		AppendTo("Dominik2", "dominik2@example.org").
+		SetFrom(&mail.Address{Name: "Dominik", Address: "dominik@example.org"}).
+		AppendTo(&mail.Address{Name: "Dominik2", Address: "dominik2@example.org"}).
 		SetDebugOutput(&buf).
 		SetSendmail("/bin/true")
 
@@ -87,22 +87,22 @@ func TestOptions(t *testing.T) {
 	}
 
 	// To() appends list
-	o = To("Ktoś", "info@example.com")
+	o = To(&mail.Address{Name: "Ktoś", Address: "info@example.com"})
 	if o.execute(m); len(m.To) != 1 {
 		t.Errorf("Expected len(To) to be 1, got %d: %+v", len(m.To), m.To)
 	}
-	o = To("Ktoś2", "info2@example.com")
+	o = To(&mail.Address{Name: "Ktoś2", Address: "info2@example.com"})
 	if o.execute(m); len(m.To) != 2 {
 		t.Errorf("Expected len(To) to be 2, got %d: %+v", len(m.To), m.To)
 	}
 
 	// From() updates current sender
-	o = From("Michał", "me@example.com")
+	o = From(&mail.Address{Name: "Michał", Address: "me@example.com"})
 	if o.execute(m); m.From == nil || m.From.Address != "me@example.com" {
 		expected := mail.Address{Name: "Michał", Address: "me@example.com"}
 		t.Errorf("Expected From address to be %s, got %s", expected, m.From)
 	}
-	o = From("Michał", "me@example.com")
+	o = From(&mail.Address{Name: "Michał", Address: "me@example.com"})
 	if o.execute(m); m.From == nil || m.From.Address != "me@example.com" {
 		expected := mail.Address{Name: "Michał", Address: "me@example.com"}
 		t.Errorf("Expected From address to be %s, got %s", expected, m.From)
