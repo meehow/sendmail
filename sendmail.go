@@ -108,12 +108,13 @@ func (m *Mail) exec(arg ...string) error {
 }
 
 // WriteTo writes headers and content of the email to io.Writer
-func (m *Mail) WriteTo(wr io.Writer) (int64, error) {
+func (m *Mail) WriteTo(wr io.Writer) (n int64, err error) {
 	isText := m.Text.Len() > 0
 	isHTML := m.HTML.Len() > 0
 
 	if isText && isHTML {
-		return 0, fmt.Errorf("Multipart mails are not supported yet")
+		err = fmt.Errorf("Multipart mails are not supported yet")
+		return
 	} else if isHTML {
 		m.Header.Set("Content-Type", "text/html; charset=UTF-8")
 	} else {
@@ -121,24 +122,44 @@ func (m *Mail) WriteTo(wr io.Writer) (int64, error) {
 		m.Header.Set("Content-Type", "text/plain; charset=UTF-8")
 	}
 
+	w := &writeCounter{w: wr}
+
 	// write header
-	if err := m.Header.Write(wr); err != nil {
-		return 0, err
+	if err = m.Header.Write(w); err != nil {
+		return
 	}
-	if _, err := wr.Write([]byte("\r\n")); err != nil {
-		return 0, err
+	if _, err = w.Write([]byte("\r\n")); err != nil {
+		return
 	}
 
 	if isText && isHTML {
 		// TODO
 	} else if isHTML {
-		if _, err := m.HTML.WriteTo(wr); err != nil {
-			return 0, err
+		if _, err = m.HTML.WriteTo(w); err != nil {
+			return
 		}
 	} else {
-		if _, err := m.Text.WriteTo(wr); err != nil {
-			return 0, err
+		if _, err = m.Text.WriteTo(w); err != nil {
+			return
 		}
 	}
-	return 0, nil
+	return w.n, nil
+}
+
+// writeCounter is an internal type wrapping an io.Writer to work around
+// the issue of net.http.Header.Write() not returning the number of bytes
+// written.
+type writeCounter struct {
+	n int64
+	w io.Writer
+}
+
+// Write satisfies the io.Writer interface. It updates an internal cache
+// for the number of bytes written.
+func (wc *writeCounter) Write(p []byte) (n int, err error) {
+	n, err = wc.w.Write(p)
+	if err == nil {
+		wc.n += int64(n)
+	}
+	return
 }
