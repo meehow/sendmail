@@ -64,7 +64,8 @@ func (m *Mail) Send() error {
 	}
 	m.Header.Set("To", strings.Join(to, ", "))
 	if m.debugOut != nil {
-		return m.WriteTo(m.debugOut)
+		_, err := m.WriteTo(m.debugOut)
+		return err
 	}
 
 	return m.exec(arg...)
@@ -90,7 +91,7 @@ func (m *Mail) exec(arg ...string) error {
 	if err = cmd.Start(); err != nil {
 		return err
 	}
-	if err = m.WriteTo(stdin); err != nil {
+	if _, err = m.WriteTo(stdin); err != nil {
 		return err
 	}
 	if err = stdin.Close(); err != nil {
@@ -107,12 +108,12 @@ func (m *Mail) exec(arg ...string) error {
 }
 
 // WriteTo writes headers and content of the email to io.Writer
-func (m *Mail) WriteTo(wr io.Writer) error { // nolint: vet
+func (m *Mail) WriteTo(wr io.Writer) (int64, error) {
 	isText := m.Text.Len() > 0
 	isHTML := m.HTML.Len() > 0
 
 	if isText && isHTML {
-		return fmt.Errorf("Multipart mails are not supported yet")
+		return 0, fmt.Errorf("Multipart mails are not supported yet")
 	} else if isHTML {
 		m.Header.Set("Content-Type", "text/html; charset=UTF-8")
 	} else {
@@ -122,22 +123,22 @@ func (m *Mail) WriteTo(wr io.Writer) error { // nolint: vet
 
 	// write header
 	if err := m.Header.Write(wr); err != nil {
-		return err
+		return 0, err
 	}
 	if _, err := wr.Write([]byte("\r\n")); err != nil {
-		return err
+		return 0, err
 	}
 
 	if isText && isHTML {
 		// TODO
 	} else if isHTML {
 		if _, err := m.HTML.WriteTo(wr); err != nil {
-			return err
+			return 0, err
 		}
-	} else if isText {
+	} else {
 		if _, err := m.Text.WriteTo(wr); err != nil {
-			return err
+			return 0, err
 		}
 	}
-	return nil
+	return 0, nil
 }
