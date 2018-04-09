@@ -111,6 +111,26 @@ func TestHTMLMail(t *testing.T) {
 	}
 }
 
+func TestWriteTo(t *testing.T) {
+	var buf bytes.Buffer
+	sm := New(
+		Subject("Cześć"),
+		From(maddr("Michał", "me@")),
+		To(maddr("Ktoś", "info@")),
+		To(maddr("Ktoś2", "info2@")),
+		DebugOutput(&buf),
+	)
+	io.WriteString(&sm.Text, ":)\r\n")
+
+	actual, err := sm.WriteTo(&buf)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	if expected := int64(buf.Len()); actual != expected {
+		t.Errorf("expeted to have written %d bytes, got %d", expected, actual)
+	}
+}
+
 func TestFromError(t *testing.T) {
 	sm := Mail{
 		To: []*mail.Address{maddr("Ktoś", "info@")},

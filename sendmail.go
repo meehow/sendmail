@@ -34,7 +34,10 @@ type Mail struct {
 
 // New creates a new Mail instance with the given options.
 func New(options ...Option) (m *Mail) {
-	m = &Mail{sendmailPath: SendmailDefault}
+	m = &Mail{
+		Header:       make(http.Header),
+		sendmailPath: SendmailDefault,
+	}
 	for _, option := range options {
 		option.execute(m)
 	}
