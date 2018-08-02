@@ -11,26 +11,39 @@ import (
 	"mime"
 	"net/http"
 	"net/mail"
-	"os"
 	"os/exec"
 	"strings"
 )
 
-var (
-	_, debug = os.LookupEnv("DEBUG")
-
-	// Binary points to the sendmail binary.
-	Binary = "/usr/sbin/sendmail"
-)
+// SendmailDefault points to the default sendmail binary location.
+const SendmailDefault = "/usr/sbin/sendmail"
 
 // Mail defines basic mail structure and headers
 type Mail struct {
 	Subject string
 	From    *mail.Address
 	To      []*mail.Address
+	CC      []*mail.Address
+	BCC     []*mail.Address
 	Header  http.Header
 	Text    bytes.Buffer
 	HTML    bytes.Buffer
+
+	sendmailPath string
+	sendmailArgs []string
+	debugOut     io.Writer
+}
+
+// New creates a new Mail instance with the given options.
+func New(options ...Option) (m *Mail) {
+	m = &Mail{
+		Header:       make(http.Header),
+		sendmailPath: SendmailDefault,
+	}
+	for _, option := range options {
+		option.execute(m)
+	}
+	return
 }
 
 // Send sends an email, or prints it on stderr,
@@ -45,9 +58,9 @@ func (m *Mail) Send() error {
 	if m.Header == nil {
 		m.Header = make(http.Header)
 	}
-	m.Header.Set("Content-Type", "text/plain; charset=UTF-8")
 	m.Header.Set("Subject", mime.QEncoding.Encode("utf-8", m.Subject))
 	m.Header.Set("From", m.From.String())
+
 	to := make([]string, len(m.To))
 	arg := make([]string, len(m.To))
 	for i, t := range m.To {
@@ -55,26 +68,51 @@ func (m *Mail) Send() error {
 		arg[i] = t.Address
 	}
 	m.Header.Set("To", strings.Join(to, ", "))
-	if debug {
-		delimiter := "\n" + strings.Repeat("-", 70)
-		fmt.Println(delimiter)
-		m.WriteTo(os.Stdout)
-		fmt.Println(delimiter)
-		return nil
+
+	if cc := concatAddresses(m.CC); cc != "" {
+		m.Header.Set("CC", cc)
 	}
-	sendmail := exec.Command(Binary, arg...)
-	stdin, err := sendmail.StdinPipe()
+	if bcc := concatAddresses(m.BCC); bcc != "" {
+		m.Header.Set("BCC", bcc)
+	}
+
+	if m.debugOut != nil {
+		_, err := m.WriteTo(m.debugOut)
+		return err
+	}
+
+	return m.exec(arg...)
+}
+
+func concatAddresses(list []*mail.Address) string {
+	buf := make([]string, 0, len(list))
+	for _, addr := range list {
+		buf = append(buf, addr.String())
+	}
+	return strings.Join(buf, ", ")
+}
+
+// exec handles sendmail command invokation.
+func (m *Mail) exec(arg ...string) error {
+	bin := SendmailDefault
+	if m.sendmailPath != "" {
+		bin = m.sendmailPath
+	}
+	args := append(append([]string{}, m.sendmailArgs...), arg...)
+	cmd := exec.Command(bin, args...)
+
+	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		return err
 	}
-	stderr, err := sendmail.StderrPipe()
+	stderr, err := cmd.StderrPipe()
 	if err != nil {
 		return err
 	}
-	if err = sendmail.Start(); err != nil {
+	if err = cmd.Start(); err != nil {
 		return err
 	}
-	if err = m.WriteTo(stdin); err != nil {
+	if _, err = m.WriteTo(stdin); err != nil {
 		return err
 	}
 	if err = stdin.Close(); err != nil {
@@ -87,19 +125,62 @@ func (m *Mail) Send() error {
 	if len(out) != 0 {
 		return errors.New(string(out))
 	}
-	return sendmail.Wait()
+	return cmd.Wait()
 }
 
 // WriteTo writes headers and content of the email to io.Writer
-func (m *Mail) WriteTo(wr io.Writer) error {
-	if err := m.Header.Write(wr); err != nil {
-		return err
+func (m *Mail) WriteTo(wr io.Writer) (n int64, err error) {
+	isText := m.Text.Len() > 0
+	isHTML := m.HTML.Len() > 0
+
+	if isText && isHTML {
+		err = fmt.Errorf("Multipart mails are not supported yet")
+		return
+	} else if isHTML {
+		m.Header.Set("Content-Type", "text/html; charset=UTF-8")
+	} else {
+		// also for mails without body
+		m.Header.Set("Content-Type", "text/plain; charset=UTF-8")
 	}
-	if _, err := wr.Write([]byte("\r\n")); err != nil {
-		return err
+
+	w := &writeCounter{w: wr}
+
+	// write header
+	if err = m.Header.Write(w); err != nil {
+		return
 	}
-	if _, err := m.Text.WriteTo(wr); err != nil {
-		return err
+	if _, err = w.Write([]byte("\r\n")); err != nil {
+		return
 	}
-	return nil
+
+	if isText && isHTML {
+		// TODO
+	} else if isHTML {
+		if _, err = m.HTML.WriteTo(w); err != nil {
+			return
+		}
+	} else {
+		if _, err = m.Text.WriteTo(w); err != nil {
+			return
+		}
+	}
+	return w.n, nil
+}
+
+// writeCounter is an internal type wrapping an io.Writer to work around
+// the issue of net.http.Header.Write() not returning the number of bytes
+// written.
+type writeCounter struct {
+	n int64
+	w io.Writer
+}
+
+// Write satisfies the io.Writer interface. It updates an internal cache
+// for the number of bytes written.
+func (wc *writeCounter) Write(p []byte) (n int, err error) {
+	n, err = wc.w.Write(p)
+	if err == nil {
+		wc.n += int64(n)
+	}
+	return
 }

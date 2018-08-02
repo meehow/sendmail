@@ -22,9 +22,9 @@ func TestValidate(tc *testing.T) {
 			e := email
 			t.Parallel()
 			err := Validate(e.Address)
-			if err == nil && e.IsValid == false {
+			if err == nil && !e.IsValid {
 				t.Errorf("Email `%s` is valid, but should be invalid", e.Address)
-			} else if err != nil && e.IsValid == true {
+			} else if err != nil && e.IsValid {
 				t.Errorf("Email `%s` is invalid, but should be valid", e.Address)
 			}
 		})

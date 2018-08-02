@@ -1,27 +1,34 @@
-Go sendmail [![Build Status](https://travis-ci.org/meehow/sendmail.svg?branch=master)](https://travis-ci.org/meehow/sendmail)
-===========
+# Go sendmail
 
-This package implements classic, well known from PHP, method of sending emails.
-It's stupid simple and it works not only with Sendmail,
-but also with other MTAs, like [Postfix](http://www.postfix.org/sendmail.1.html)
-or [sSMTP](https://wiki.debian.org/sSMTP), which provide compatibility interface.
+[![GoDoc](https://godoc.org/github.com/meehow/sendmail?status.svg)](https://godoc.org/github.com/meehow/sendmail)
+[![Build Status](https://travis-ci.org/meehow/sendmail.svg?branch=master)](https://travis-ci.org/meehow/sendmail)
+
+
+This package implements the classic method of sending emails, well known
+from PHP. It's stupid simple and it works not only with Sendmail, but also
+with other MTAs, like [Postfix][], [sSMTP][], or [mhsendmail][], which
+provide a compatible interface.
+
+[Postfix]:    http://www.postfix.org/sendmail.1.html
+[sSMTP]:      https://wiki.debian.org/sSMTP
+[mhsendmail]: https://github.com/mailhog/mhsendmail
 
 * it separates email headers from email body,
 * encodes UTF-8 headers like `Subject`, `From`, `To`
 * makes it easy to use [text/template](https://golang.org/pkg/text/template)
 * doesn't require any SMTP configuration,
-* just uses `/usr/sbin/sendmail` command which is present on most of the systems,
-  * if not, just update `sendmail.Binary`
-* outputs emails to _stdout_ when environment variable `DEBUG` is set.
+* can write email body to a custom `io.Writer` to simplify testing
+* by default, it just uses `/usr/sbin/sendmail` (but can be changed if need be)
 
-Installation
-------------
+
+## Installation
+
 ```
 go get -u github.com/meehow/sendmail
 ```
 
-Usage
------
+## Usage
+
 ```go
 package main
 
@@ -59,7 +66,9 @@ tpl.ExecuteTemplate(&sm.Text, "email", &struct{ Name string }{"Dominik"})
 ```
 
 
-ToDo
-----
+## ToDo
 
-* HTML emails
+- [x] HTML emails
+- [ ] multipart emails (HTML + Text)
+- [ ] attachments
+- [ ] inline attachments

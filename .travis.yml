@@ -4,3 +4,11 @@ go:
   - "1.8.x"
   - "1.9.x"
   - "1.10.x"
+
+before_install:
+  - go get -u gopkg.in/alecthomas/gometalinter.v2
+  - gometalinter.v2 --install
+
+script:
+  - gometalinter.v2 --disable=gas --disable=gocyclo ./...
+  - go test -v ./...
