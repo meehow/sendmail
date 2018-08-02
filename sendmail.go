@@ -23,6 +23,8 @@ type Mail struct {
 	Subject string
 	From    *mail.Address
 	To      []*mail.Address
+	CC      []*mail.Address
+	BCC     []*mail.Address
 	Header  http.Header
 	Text    bytes.Buffer
 	HTML    bytes.Buffer
@@ -66,12 +68,28 @@ func (m *Mail) Send() error {
 		arg[i] = t.Address
 	}
 	m.Header.Set("To", strings.Join(to, ", "))
+
+	if cc := concatAddresses(m.CC); cc != "" {
+		m.Header.Set("CC", cc)
+	}
+	if bcc := concatAddresses(m.BCC); bcc != "" {
+		m.Header.Set("BCC", bcc)
+	}
+
 	if m.debugOut != nil {
 		_, err := m.WriteTo(m.debugOut)
 		return err
 	}
 
 	return m.exec(arg...)
+}
+
+func concatAddresses(list []*mail.Address) string {
+	buf := make([]string, 0, len(list))
+	for _, addr := range list {
+		buf = append(buf, addr.String())
+	}
+	return strings.Join(buf, ", ")
 }
 
 // exec handles sendmail command invokation.

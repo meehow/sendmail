@@ -38,6 +38,18 @@ func (m *Mail) AppendTo(toAddress *mail.Address) *Mail {
 	return m
 }
 
+// AppendCC adds a carbon-copy recipient to the Mail.
+func (m *Mail) AppendCC(ccAddress *mail.Address) *Mail {
+	m.CC = append(m.CC, ccAddress)
+	return m
+}
+
+// AppendBCC adds a blind carbon-copy recipient to the Mail.
+func (m *Mail) AppendBCC(bccAddress *mail.Address) *Mail {
+	m.BCC = append(m.BCC, bccAddress)
+	return m
+}
+
 // SetFrom updates (replaces) the sender's address.
 func (m *Mail) SetFrom(fromAddress *mail.Address) *Mail {
 	m.From = fromAddress
