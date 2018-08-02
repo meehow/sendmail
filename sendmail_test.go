@@ -1,9 +1,12 @@
 package sendmail
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"net/mail"
+	"os"
+	"strings"
 	"testing"
 )
 
@@ -13,24 +16,18 @@ func maddr(name, address string) *mail.Address {
 	return &mail.Address{Name: name, Address: address + domain}
 }
 
-func init() {
-	Binary = "/bin/true"
-}
-
 func TestSend(tc *testing.T) {
 	tc.Run("debug:true", func(t *testing.T) {
+		t.Parallel()
 		testSend(t, true)
 	})
 	tc.Run("debug:false", func(t *testing.T) {
+		t.Parallel()
 		testSend(t, false)
 	})
 }
 
 func testSend(t *testing.T, withDebug bool) {
-	oldDebug := debug
-	debug = withDebug
-	defer func() { debug = oldDebug }()
-
 	sm := Mail{
 		Subject: "Cześć",
 		From:    maddr("Michał", "me@"),
@@ -39,6 +36,8 @@ func testSend(t *testing.T, withDebug bool) {
 			maddr("Ktoś2", "info2@"),
 		},
 	}
+	sm.SetSendmail("/bin/true").SetDebug(withDebug)
+
 	io.WriteString(&sm.Text, ":)\r\n")
 	if err := sm.Send(); err != nil {
 		t.Errorf("(debug=%v) %v", withDebug, err)
@@ -50,6 +49,85 @@ func testSend(t *testing.T, withDebug bool) {
 	from := sm.Header.Get("From")
 	if from != fmt.Sprintf("=?utf-8?q?Micha=C5=82?= <me@%s>", domain) {
 		t.Errorf("(debug=%v) Wrong `From` encoding: %s", withDebug, from)
+	}
+}
+
+func TestTextMail(t *testing.T) {
+	var buf bytes.Buffer
+	sm := New(
+		Subject("Cześć"),
+		From(maddr("Michał", "me@")),
+		To(maddr("Ktoś", "info@")),
+		To(maddr("Ktoś2", "info2@")),
+		DebugOutput(&buf),
+	)
+	io.WriteString(&sm.Text, ":)\r\n")
+
+	expected := strings.Join([]string{
+		"Content-Type: text/plain; charset=UTF-8",
+		"From: =?utf-8?q?Micha=C5=82?= <me@example.com>",
+		"Subject: =?utf-8?q?Cze=C5=9B=C4=87?=",
+		"To: =?utf-8?q?Kto=C5=9B?= <info@example.com>, =?utf-8?q?Kto=C5=9B2?= <info2@example.com>",
+		"",
+		":)",
+		"",
+	}, "\r\n")
+
+	if err := sm.Send(); err != nil {
+		t.Errorf("Error writing to buffer: %v", err)
+	}
+	if actual := buf.String(); actual != expected {
+		t.Error("Unexpected mail content", actual)
+	}
+}
+
+func TestHTMLMail(t *testing.T) {
+	var buf bytes.Buffer
+	sm := New(
+		Subject("Cześć"),
+		From(maddr("Michał", "me@")),
+		To(maddr("Ktoś", "info@")),
+		To(maddr("Ktoś2", "info2@")),
+		DebugOutput(&buf),
+	)
+	io.WriteString(&sm.HTML, "<p>:)</p>\r\n")
+
+	expected := strings.Join([]string{
+		"Content-Type: text/html; charset=UTF-8",
+		"From: =?utf-8?q?Micha=C5=82?= <me@example.com>",
+		"Subject: =?utf-8?q?Cze=C5=9B=C4=87?=",
+		"To: =?utf-8?q?Kto=C5=9B?= <info@example.com>, =?utf-8?q?Kto=C5=9B2?= <info2@example.com>",
+		"",
+		"<p>:)</p>",
+		"",
+	}, "\r\n")
+
+	if err := sm.Send(); err != nil {
+		t.Errorf("Error writing to buffer: %v", err)
+	}
+	if actual := buf.String(); actual != expected {
+		fmt.Fprintln(os.Stderr, actual)
+		t.Errorf("Unexpected mail content")
+	}
+}
+
+func TestWriteTo(t *testing.T) {
+	var buf bytes.Buffer
+	sm := New(
+		Subject("Cześć"),
+		From(maddr("Michał", "me@")),
+		To(maddr("Ktoś", "info@")),
+		To(maddr("Ktoś2", "info2@")),
+		DebugOutput(&buf),
+	)
+	io.WriteString(&sm.Text, ":)\r\n")
+
+	actual, err := sm.WriteTo(&buf)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	if expected := int64(buf.Len()); actual != expected {
+		t.Errorf("expeted to have written %d bytes, got %d", expected, actual)
 	}
 }
 
@@ -68,5 +146,33 @@ func TestToError(t *testing.T) {
 	}
 	if sm.Send() == nil {
 		t.Errorf("Expected an error because of missing `To` addresses")
+	}
+}
+
+func TestNew(t *testing.T) {
+	var buf bytes.Buffer
+	m := New(
+		Subject("Test subject"),
+		From(maddr("Dominik", "dominik@")),
+		To(maddr("Dominik2", "dominik2@")),
+		DebugOutput(&buf),
+		Sendmail("/bin/true"),
+	)
+
+	if m.Subject != "Test subject" {
+		t.Errorf("Expected subject to be %q, got %q", "Test subject", m.Subject)
+	}
+	if len(m.To) != 1 {
+		t.Errorf("Expected len(To) to be 1, got %d: %+v", len(m.To), m.To)
+	}
+	if m.From == nil || m.From.Address != "dominik@example.com" {
+		expected := mail.Address{Name: "Dominik", Address: "dominik@example.com"}
+		t.Errorf("Expected From address to be %s, got %s", expected, m.From)
+	}
+	if m.sendmailPath != "/bin/true" {
+		t.Errorf("Expected sendmail to be %q, got %q", "/bin/true", m.sendmailPath)
+	}
+	if m.debugOut != &buf {
+		t.Errorf("Expected debugOut to be %T (buf), got %T", &buf, m.debugOut)
 	}
 }
