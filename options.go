@@ -33,20 +33,20 @@ func (m *Mail) SetDebugOutput(w io.Writer) *Mail {
 }
 
 // AppendTo adds a recipient to the Mail.
-func (m *Mail) AppendTo(toAddress *mail.Address) *Mail {
-	m.To = append(m.To, toAddress)
+func (m *Mail) AppendTo(toAddress ...*mail.Address) *Mail {
+	m.To = append(m.To, toAddress...)
 	return m
 }
 
 // AppendCC adds a carbon-copy recipient to the Mail.
-func (m *Mail) AppendCC(ccAddress *mail.Address) *Mail {
-	m.CC = append(m.CC, ccAddress)
+func (m *Mail) AppendCC(ccAddress ...*mail.Address) *Mail {
+	m.CC = append(m.CC, ccAddress...)
 	return m
 }
 
 // AppendBCC adds a blind carbon-copy recipient to the Mail.
-func (m *Mail) AppendBCC(bccAddress *mail.Address) *Mail {
-	m.BCC = append(m.BCC, bccAddress)
+func (m *Mail) AppendBCC(bccAddress ...*mail.Address) *Mail {
+	m.BCC = append(m.BCC, bccAddress...)
 	return m
 }
 
