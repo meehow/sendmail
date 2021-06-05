@@ -45,7 +45,9 @@ func (m *Mail) Send() error {
 	if m.Header == nil {
 		m.Header = make(http.Header)
 	}
-	m.Header.Set("Content-Type", "text/plain; charset=UTF-8")
+	if m.Header.Get("Content-Type") == "" {
+		m.Header.Set("Content-Type",  "text/plain; charset=UTF-8")
+	}
 	m.Header.Set("Subject", mime.QEncoding.Encode("utf-8", m.Subject))
 	m.Header.Set("From", m.From.String())
 	to := make([]string, len(m.To))

@@ -70,3 +70,30 @@ func TestToError(t *testing.T) {
 		t.Errorf("Expected an error because of missing `To` addresses")
 	}
 }
+
+func TestSetsContentTypeHeader(t *testing.T)  {
+	contentTypeHeader := "Content-Type"
+	contentTypeValue := `text/html; charset="UTF-8"`
+
+	sm := Mail{
+		Subject: "Test sets header",
+		From: maddr("Alexander", "me@"),
+		To: []*mail.Address{maddr("Info", "info@")},
+		Header: map[string][]string{},
+	}
+
+	sm.Header.Set(contentTypeHeader, contentTypeValue)
+
+	io.WriteString(&sm.Text, ":)\r\n")
+
+
+	if err := sm.Send(); err != nil {
+		t.Errorf("%v", err)
+	}
+
+	setHeaderValue := sm.Header.Get(contentTypeHeader)
+
+	if  setHeaderValue != contentTypeValue {
+		t.Errorf("Exepected %s == %s, but it equals %s", contentTypeHeader, contentTypeValue, setHeaderValue)
+	}
+}
